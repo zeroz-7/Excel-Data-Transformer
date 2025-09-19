@@ -3,42 +3,64 @@ import pandas as pd
 from crewai.tools import tool
 from typing import List
 import logging
+import tempfile
 
 logger = logging.getLogger(__name__)
 
 @tool("Excel Data Inspector Tool")
 def excel_data_inspector_tool(file_paths: List[str]) -> str:
     """
-    Reads a sample from the first provided Excel file to provide structure + preview.
-    Returns a markdown-like string or an error message.
+    Inspect each provided Excel file (lightweight):
+    - Report all column names
+    - Show first 5 rows as preview
+    
+    Returns a markdown-like report for all files.
     """
-    try:
-        if not file_paths or not isinstance(file_paths, list):
-            return "Error: A list of file paths must be provided."
+    results = []
 
-        first_file_path = file_paths[0]
-        if not os.path.exists(first_file_path):
-            return f"Error: File not found at path: {first_file_path}"
+    if not file_paths or not isinstance(file_paths, list):
+        return "Error: A list of file paths must be provided."
+
+    for path in file_paths:
+        original_path = path
+
+        if not os.path.exists(path):
+            # Try resolving basename in temp dir and cwd
+            basename = os.path.basename(path)
+            tmp_dir = tempfile.gettempdir()
+            candidates = [
+                os.path.join(os.getcwd(), basename),
+                os.path.join(tmp_dir, basename),
+            ]
+            for fname in os.listdir(tmp_dir):
+                if basename in fname:
+                    candidates.append(os.path.join(tmp_dir, fname))
+            found = next((c for c in candidates if os.path.exists(c)), None)
+            if found:
+                logger.info("Resolved missing path '%s' -> '%s'", path, found)
+                path = found
+            else:
+                results.append(f"❌ File not found: {original_path}")
+                continue
 
         try:
-            df = pd.read_excel(first_file_path, engine="openpyxl", skiprows=3)
+            df = pd.read_excel(path, engine="openpyxl")
+
+            columns = df.columns.tolist()
+            try:
+                preview = df.head().to_markdown(index=False)
+            except Exception:
+                preview = df.head().to_string(index=False)
+
+            results.append(
+                f"### Excel File Summary\n"
+                f"**File Path:** `{path}`\n\n"
+                f"**Columns ({len(columns)}):** {', '.join(columns)}\n\n"
+                f"**Preview (first 5 rows):**\n{preview}\n"
+            )
+
         except Exception as e:
-            logger.warning(f"Excel read with skiprows failed: {e}. Trying without skiprows.")
-            df = pd.read_excel(first_file_path, engine="openpyxl")
+            logger.exception(f"Error inspecting {path}")
+            results.append(f"⚠️ Error reading {path}: {e}")
 
-        columns = df.columns.tolist()
-        try:
-            data_sample = df.head().to_markdown(index=False)
-        except Exception:
-            data_sample = df.head().to_string(index=False)
-
-        return (
-            f"### Excel File Structure and Sample\n\n"
-            f"**File Path:** `{first_file_path}`\n\n"
-            f"**Detected Columns ({len(columns)}):**\n{', '.join(columns)}\n\n"
-            f"**Data Preview (first 5 rows):**\n{data_sample}"
-        )
-
-    except Exception as e:
-        logger.exception("An error occurred while inspecting the Excel file")
-        return f"An error occurred while inspecting the file: {str(e)}"
+    return "\n---\n".join(results) if results else "No valid Excel files inspected."

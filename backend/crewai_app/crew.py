@@ -75,8 +75,6 @@ class CsvOrganiser:
         model = (
             llm_config.get("model")
             or os.getenv("LLM_MODEL")
-            or os.getenv("OPENAI_MODEL_NAME")
-            or os.getenv("MODEL")
             or "gemini/gemini-2.5-flash"
         )
 
@@ -86,23 +84,15 @@ class CsvOrganiser:
         api_key = (
             llm_config.get("api_key")
             or os.getenv("GEMINI_API_KEY")
-            or os.getenv("GOOGLE_API_KEY")
-            or os.getenv("GOOGLE_GENERATIVE_AI_API_KEY")
-            or os.getenv("LLM_API_KEY")
         )
 
-        base_url = llm_config.get("base_url") or os.getenv("LLM_BASE_URL")
-        provider = llm_config.get("provider", "litellm")
-
         if not api_key:
-            logger.warning("No API key found for Gemini/Google. Set GEMINI_API_KEY or GOOGLE_API_KEY or LLM_API_KEY.")
+            logger.warning("❌ GEMINI_API_KEY not found!")
 
-        logger.info(f"Configured LLM -> provider='{provider}', model='{model}', base_url='{base_url}', api_key_set={'yes' if api_key else 'no'}")
+        logger.info(f"Configured LLM: {model}, api_key_set={'yes' if api_key else 'no'}")
 
         return LLM(
-            provider=provider,
             model=model,
-            base_url=base_url,
             api_key=api_key,
         )
 

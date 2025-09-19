@@ -36,14 +36,25 @@ def run(prompt: str, file_paths: list):
     - prompt: user input
     - file_paths: list of Excel file paths (saved in temp dir)
     """
+    # Defensive checks
+    if not isinstance(file_paths, list):
+        raise ValueError("file_paths must be a list of filesystem paths.")
+
+    # Provide both raw list and readable string for the agent. This ensures the agent sees absolute paths.
     inputs = {
         "prompt": prompt,
-        "files": file_paths,
+        "files": file_paths,                   # raw list used by tools
+        "files_str": "\n".join(file_paths),    # human-friendly and LLM-friendly representation
         "current_year": str(datetime.now().year),
     }
 
+    # Log exactly what we're passing in
+    logger.info("Launching CsvOrganiser crew with inputs:")
+    logger.info("prompt: %s", (prompt[:200] + "...") if len(prompt) > 200 else prompt)
+    logger.info("files (list): %s", inputs["files"])
+    logger.info("files_str (preview): %s", inputs["files_str"][:500].replace("\n", " | "))
+
     try:
-        logger.info("Launching CsvOrganiser crew...")
         result = CsvOrganiser().crew().kickoff(inputs=inputs)
 
         # Always sanitize to return only Python code

@@ -6,7 +6,7 @@ import inspect
 
 from fastapi import FastAPI, UploadFile, Form, File
 from fastapi.middleware.cors import CORSMiddleware
-from typing import List
+from typing import List, Optional
 
 try:
     from crewai_app.crewmain import run
@@ -16,13 +16,34 @@ except Exception as e:
         f"Could not import 'run' from backend.crewai_app.crewmain: {e}"
     )
 
+# -----------------------------------------------------------------------------
+# Logging configuration
+# -----------------------------------------------------------------------------
+# Console: INFO-level only (so terminal isn’t spammed)
+# File: DEBUG-level (so you can check full trace later in logs/backend.log)
+log_dir = os.path.join(os.getcwd(), "logs")
+os.makedirs(log_dir, exist_ok=True)
+log_file = os.path.join(log_dir, "backend.log")
+
 logging.basicConfig(
-    level=logging.DEBUG,
+    level=logging.DEBUG,  # root logger
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    handlers=[
+        logging.StreamHandler(),                # console
+        logging.FileHandler(log_file, mode="a", encoding="utf-8")  # file
+    ]
 )
 
-logger = logging.getLogger(__name__)
+# Silence noisy libs in console
+logging.getLogger("httpx").setLevel(logging.WARNING)
+logging.getLogger("httpcore").setLevel(logging.WARNING)
+logging.getLogger("LiteLLM").setLevel(logging.INFO)
 
+logger = logging.getLogger("backend.main")
+
+# -----------------------------------------------------------------------------
+# FastAPI app setup
+# -----------------------------------------------------------------------------
 app = FastAPI()
 
 app.add_middleware(
@@ -33,8 +54,14 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# -----------------------------------------------------------------------------
+# Endpoint
+# -----------------------------------------------------------------------------
 @app.post("/transform")
-async def transform(prompt: str = Form(...), files: List[UploadFile] = File(...)):
+async def transform(prompt: str = Form(...), files: Optional[List[UploadFile]] = File(None)):
+    if not files:
+        return {"error": "No files uploaded."}
+
     if run is None:
         return {"status": "error", "error": "Server misconfiguration: crew runner 'run' not available."}
 
