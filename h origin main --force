@@ -1,0 +1,30 @@
+[33mcommit f927751ed1e1a2e88bb8edf5e32d7e7a34a4cfb0[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m)[m
+Author: Zero <zero7lulu@gmail.com>
+Date:   Fri Sep 19 16:31:46 2025 +0530
+
+    removing venv
+
+ .gitignore | 1 [32m+[m
+ 1 file changed, 1 insertion(+)
+
+[33mcommit a6ec1f90729b86bfb61fdd3fc8c53ba6f9e2f985[m
+Author: Zero <zero7lulu@gmail.com>
+Date:   Fri Sep 19 16:26:36 2025 +0530
+
+    Initial commit
+
+ .gitignore                        |   3 [32m+[m
+ backend/__init__.py               |   0
+ backend/crewai_app/__init__.py    |   0
+ backend/crewai_app/agents.yaml    |  37 [32m++++++++++[m
+ backend/crewai_app/crew.py        | 139 [32m++++++++++++++++++++++++++++++++++++++[m
+ backend/crewai_app/crewmain.py    |  56 [32m+++++++++++++++[m
+ backend/crewai_app/custom_tool.py |  44 [32m++++++++++++[m
+ backend/crewai_app/tasks.yaml     |  16 [32m+++++[m
+ backend/main.py                   |  74 [32m++++++++++++++++++++[m
+ check_ollama.py                   |  28 [32m++++++++[m
+ final_script.md                   |  43 [32m++++++++++++[m
+ frontend/app.py                   |  46 [32m+++++++++++++[m
+ pyproject.toml                    |  23 [32m+++++++[m
+ requirements.txt                  |  26 [32m+++++++[m
+ 14 files changed, 535 insertions(+)

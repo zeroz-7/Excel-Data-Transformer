@@ -1,0 +1,16 @@
+script_generation_task:
+  description: >
+    You have been given a list of Excel file paths: {files}.
+    Your primary goal is to generate a structured, modular Python script to transform the data in these files based on the user's instructions: {prompt}.
+    First, use the 'Excel Data Inspector Tool' with the provided file paths to understand the data structure.
+    Then, write the Python script. Ensure it includes step-by-step comments, error handling, and validation checks.
+  expected_output: >
+    A complete, executable Python script — no explanations, no markdown, just valid Python code.
+validation_task:
+  description: >
+    Review the Python script generated in the previous step against the user's original instructions ({prompt}).
+    Ensure that all requested transformations are correctly implemented and that the script is robust.
+    If the script is perfect, output it directly.
+    If there are issues, correct the script and provide the complete, final version.
+  expected_output: >
+    The final, validated, and complete Python script — no explanations, no markdown, just valid Python code.

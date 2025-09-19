@@ -1,0 +1,26 @@
+# Web/UI
+streamlit>=1.36
+requests>=2.31
+
+# Backend API
+fastapi>=0.110
+uvicorn[standard]>=0.30
+python-multipart>=0.0.9
+python-dotenv>=1.0
+
+# CrewAI ecosystem
+crewai==0.186.1
+crewai_tools>=0.1.0
+litellm>=1.41
+
+# Data handling
+pandas>=2.2
+openpyxl>=3.1
+pyyaml>=6.0
+
+# Google Gemini SDK (optional if you call API directly)
+google-generativeai>=0.7.0
+
+# Compatibility helpers
+pydantic>=2.7
+typing_extensions>=4.11
