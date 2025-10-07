@@ -191,8 +191,9 @@ python transform.py
 
 * **Encoding errors with CSV**
 
-  * Ensure UTF-8 encoding.
-  * Add `encoding="utf-8-sig"` if files have BOM.
+  * First try: utf-8-sig (handles BOM from Excel exports)
+  * Then try: utf-8 (standard UTF-8)
+  * Fallback: latin-1, cp1252, iso-8859-1
 
 ---
 
