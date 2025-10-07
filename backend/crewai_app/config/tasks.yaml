@@ -1,0 +1,46 @@
+script_generation_task:
+  description: >
+    CRITICAL: You MUST use the 'Excel Data Inspector Tool' FIRST with these EXACT file paths: {files}
+    
+    The tool will return JSON with inspection results. CHECK THE "success" FIELD:
+    - If "success": false, STOP and return an error message explaining which files failed
+    - If "success": true, proceed with script generation
+    
+    ACTUAL File Paths: {files_str}
+    
+    User Instructions: {prompt}
+    
+    Step 1: Call Excel Data Inspector Tool with: {files}
+    Step 2: Parse JSON response - CHECK THE "success" FIELD
+    Step 3: If inspection failed, return: "ERROR: File inspection failed - [list errors]"
+    Step 4: If inspection succeeded, generate script using ACTUAL columns from JSON
+    Step 5: NEVER use hypothetical file names or assume column structures
+    
+    IMPORTANT: If file inspection fails, return an error message, NOT Python code!
+  expected_output: >
+    Either:
+    - A complete, executable Python script (if file inspection succeeded)
+    - OR an error message starting with "ERROR:" (if file inspection failed)
+
+validation_task:
+  description: >
+    CRITICAL: Review the generated Python script against:
+    1. The actual file structure from JSON inspection of: {files_str}
+    2. User instructions: {prompt}
+    
+    Verify that:
+    - The script correctly handles the column names and data types found in the JSON inspection
+    - All requested transformations from the prompt are implemented
+    - The script properly handles multiple files if provided
+    - Proper error handling and data validation are included
+    - The code is efficient and well-commented
+    
+    Pay special attention to:
+    - Column name matching (exact names from JSON inspection)
+    - Data type conversions
+    - File merging logic for multiple files
+    - Reference file mappings if required
+    
+    If corrections are needed, provide the complete corrected script.
+  expected_output: >
+    The final, validated, and complete Python script — no explanations, no markdown, just valid Python code.

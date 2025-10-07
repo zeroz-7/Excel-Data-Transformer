@@ -2,7 +2,9 @@ import os
 from dotenv import load_dotenv
 
 # Load env vars (Gemini key, etc.) BEFORE importing crew modules
-load_dotenv()
+# Force load .env from project root
+dotenv_path = os.path.join(os.path.dirname(__file__), "..", "..", ".env")
+load_dotenv(dotenv_path)
 
 import warnings
 import traceback
@@ -33,34 +35,47 @@ def _sanitize_output(result_obj):
 def run(prompt: str, file_paths: list):
     """
     Entry point for the crew. Called from FastAPI (main.py).
-    - prompt: user input
-    - file_paths: list of Excel file paths (saved in temp dir)
     """
     # Defensive checks
     if not isinstance(file_paths, list):
         raise ValueError("file_paths must be a list of filesystem paths.")
 
-    # Provide both raw list and readable string for the agent. This ensures the agent sees absolute paths.
+    # Validate that files actually exist before starting crew
+    missing_files = []
+    for f_path in file_paths:
+        if not os.path.exists(f_path):
+            missing_files.append(f_path)
+    
+    if missing_files:
+        error_msg = f"Files not found before crew execution: {missing_files}"
+        logger.error(f"❌ {error_msg}")
+        raise Exception(error_msg)
+
+    # DEBUG: Check API key before crew execution
+    api_key = os.getenv("GEMINI_API_KEY")
+    logger.info(f"🔑 API Key before crew: {'LOADED' if api_key else 'MISSING'}")
+
     inputs = {
         "prompt": prompt,
-        "files": file_paths,                   # raw list used by tools
-        "files_str": "\n".join(file_paths),    # human-friendly and LLM-friendly representation
+        "files": file_paths,
+        "files_str": "\n".join(file_paths),
         "current_year": str(datetime.now().year),
     }
 
-    # Log exactly what we're passing in
     logger.info("Launching CsvOrganiser crew with inputs:")
-    logger.info("prompt: %s", (prompt[:200] + "...") if len(prompt) > 200 else prompt)
     logger.info("files (list): %s", inputs["files"])
-    logger.info("files_str (preview): %s", inputs["files_str"][:500].replace("\n", " | "))
 
     try:
         result = CsvOrganiser().crew().kickoff(inputs=inputs)
-
-        # Always sanitize to return only Python code
         script = _sanitize_output(result)
-
+        
+        # Check if the result is an error message
+        if script.strip().upper().startswith('ERROR:'):
+            logger.error(f"❌ Agent returned error: {script}")
+            raise Exception(script)
+            
         return script
+        
     except Exception as e:
         error_details = traceback.format_exc()
         logger.error(f"Error running crew: {str(e)}\n\n{error_details}")
